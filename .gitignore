@@ -1,0 +1,4 @@
+config.json
+test.cpp
+dist/*
+.vscode/*
