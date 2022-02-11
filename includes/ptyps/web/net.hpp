@@ -2,6 +2,7 @@
 
 // Copyright (C) 2022 Dave Perry (dbdii407)
 
+#include "../error.hpp"
 #include "../funcs.hpp"
 
 #include <arpa/inet.h>
@@ -14,19 +15,7 @@
 #include <list>
 
 namespace p$web::net {
-  struct exception : public std::exception {
-    private:
-      std::string message;
-
-    public:
-      template <typename ...A>
-        exception(std::string_view str) : message(str) {
-        }
-
-      const char* what() const noexcept override {
-        return message.data();
-      }
-  };
+  using exception = p$err::exception;
 
   enum class status {
     FAIL = EOF,
