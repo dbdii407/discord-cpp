@@ -57,14 +57,14 @@ namespace p$web::net {
 
   // determines whether or not an IP address is valid IPv6
   bool isIPv6(std::string_view ip) {
-    sockaddr_in6 sa = {};
+    auto sa = sockaddr_in6();
     auto i = ::inet_pton(AF_INET6, &ip[0], &(sa.sin6_addr));
     return (i == 1) ? !0 : !1;
   }
 
   // determines whether or not an IP address is valid IPv4
   bool isIPv4(std::string_view ip) {
-    sockaddr_in sa = {};
+    auto sa = sockaddr_in();
     auto i = ::inet_pton(AF_INET, &ip[0], &(sa.sin_addr));
     return (i == 1) ? !0 : !1;
   }
