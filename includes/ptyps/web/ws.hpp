@@ -341,14 +341,14 @@ namespace p$web::wss {
 
         else {
           p$web::ws::decode(recvd, rxbuf, [&](opcode opcode, p$web::ws::decode_variant vari) {
-            if (opcode == p$web::ws::opcode::CLOSE) {
+            if (opcode == opcode::CLOSE) {
               open = !1;
 
-              auto code = std::get<p$web::ws::status>(vari);
+              auto code = std::get<status>(vari);
               return ws_on_close(code);
             }
 
-            if (opcode == p$web::ws::opcode::TEXT) {
+            if (opcode == opcode::TEXT) {
               auto text = std::get<std::string>(vari);
               return ws_on_text(text);
             }
