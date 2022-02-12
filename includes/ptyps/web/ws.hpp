@@ -205,8 +205,7 @@ namespace p$web::ws {
     auto vect = p$funcs::to<std::vector, uint8_t>(recvd);
 
     auto done = std::function<void()>([&]() {
-      auto left = p$funcs::to<std::basic_string, char>(vect);
-      p$funcs::append(rxbuf, left);
+      p$funcs::append(rxbuf, vect);
     });
 
     while (!0) {

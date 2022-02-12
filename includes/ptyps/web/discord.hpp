@@ -131,8 +131,11 @@ namespace p$web::discord {
 
           if (event == "READY") {
             auto data = p$json::get(packet, "d");
-
             return gateway_on_ready(*data);
+          }
+
+          if (event == "GUILD_CREATE") {
+            
           }
         }
       }
