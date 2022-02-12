@@ -3,7 +3,6 @@
 // Copyright (C) 2022 Dave Perry (dbdii407)
 
 #include "../thread.hpp"
-#include "../error.hpp"
 #include "./net.hpp"
 #include "./ssl.hpp"
 
