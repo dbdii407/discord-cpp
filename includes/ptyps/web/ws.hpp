@@ -10,7 +10,8 @@
 namespace p$web::ws {
   using exception = p$err::exception;
 
-  constexpr int OPCODE_UNKNOWN = EOF;
+  // -----
+
   constexpr int OPCODE_CONTINUATION = 0b00000000;
   constexpr int OPCODE_TEXT = 0b00000001;
   constexpr int OPCODE_BINARY = 0b00000010;
@@ -23,9 +24,6 @@ namespace p$web::ws {
   constexpr int MASKLEN = 4;
 
   enum class opcode {
-    UNKNOWN = OPCODE_UNKNOWN,
-
-    // Actual OPCODES
     CONTINUATION = OPCODE_CONTINUATION,
     TEXT,
     BINARY,
@@ -33,6 +31,50 @@ namespace p$web::ws {
     PING = OPCODE_PING,
     PONG = OPCODE_PONG
   };
+
+  // -----
+
+  constexpr int STATUS_NORMAL = 1000;
+  constexpr int STATUS_GOING_AWAY = 1001;
+  constexpr int STATUS_PROTO_ERROR = 1002;
+  constexpr int STATUS_UNSUPPORTED_DATA = 1003;
+  constexpr int STATUS_NO_STATUS = 1005;
+  constexpr int STATUS_RESERVED = 1006; // not to be used
+  constexpr int STATUS_INVALID_PAYLOAD = 1007;
+  constexpr int STATUS_POLICY_VIOLATION = 1008;
+  constexpr int STATUS_MSG_TOO_BIG = 1009;
+  constexpr int STATUS_EXT_REQUIRED = 1010;
+  constexpr int STATUS_INTERNAL_EP_ERROR = 1011;
+  constexpr int STATUS_SERVICE_RESTART = 1012;
+  constexpr int STATUS_TRY_AGAIN_LATER = 1013;
+  constexpr int STATUS_BAD_GATEWAY = 1014;
+  constexpr int STATUS_TLS_HANDSHAKE = 1015;
+
+  constexpr int STATUS_SUBPROTO_ERROR = 3000;
+  constexpr int STATUS_INVALID_SUBPROTO_DATA = 3001;
+
+  enum class status {
+    NORMAL = 1000,
+    GOING_AWAY,
+    PROTO_ERROR,
+    UNSUPPORTED_DATA,
+
+    NO_STATUS = 1005,
+    RESERVED,
+    INVALID_PAYLOAD,
+    POLICY_VIOLATION,
+    MSG_TOO_BIG,
+    EXT_REQUIRED,
+    INTERNAL_EP_ERROR,
+    SERVICE_RESTART,
+    TRY_AGAIN_LATER,
+    BAD_GATEWAY,
+    TLS_HANDSHAKE,
+
+    SUBPROTO_ERROR = 3000,
+    INVALID_SUBPROTO_DATA
+  };
+
 
   static std::string magic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
@@ -78,7 +120,7 @@ namespace p$web::ws {
     return vect;
   }
 
-  std::vector<uint8_t> UInt16ToUint8(ulong i) {
+  std::vector<uint8_t> UInt16ToUInt8(ulong i) {
     auto vect = std::vector<uint8_t>();
 
     vect.push_back((i >> 8) & 0xFF);
@@ -88,9 +130,6 @@ namespace p$web::ws {
   }
 
   std::string encode(bool masked, opcode op, std::string data) {
-    if (op == opcode::UNKNOWN)
-      throw exception("must be a valid opcode");
-
     auto vect = std::vector<uint8_t>();
     auto length = data.size();
     auto p = 0;
@@ -108,7 +147,7 @@ namespace p$web::ws {
     else if (length >= 126 && length <= 65565) {
       vect[p++] = char(0x7E) | (masked ? MASK : 0);
 
-      for (auto i : UInt16ToUint8(length))
+      for (auto i : UInt16ToUInt8(length))
         vect[p++] = i;
     }
 
@@ -138,23 +177,26 @@ namespace p$web::ws {
     return p$funcs::to<std::basic_string, char>(vect);
   }
 
-  uint64_t UInt8ToUInt64(std::vector<uint8_t> &vect, int pos = 0) {
-    return (((uint64_t) vect[pos + 0]) << 56) |
-           (((uint64_t) vect[pos + 1]) << 48) |
-           (((uint64_t) vect[pos + 2]) << 40) |
-           (((uint64_t) vect[pos + 3]) << 32) |
-           (((uint64_t) vect[pos + 4]) << 24) |
-           (((uint64_t) vect[pos + 5]) << 16) |
-           (((uint64_t) vect[pos + 6]) <<  8) |
-           (((uint64_t) vect[pos + 7]) <<  0);
+  uint16_t UInt16FromUInt8(std::vector<uint8_t> &vect, int &pos) {
+    return ((uint16_t) vect[pos++] << 8) |
+           ((uint16_t) vect[pos++] << 0);
   }
 
-  uint16_t UInt8ToUInt16(std::vector<uint8_t> &vect, int pos = 0) {
-    return (((uint16_t) vect[pos + 0]) << 8) |
-           (((uint16_t) vect[pos + 1]) << 0);
+  uint64_t UInt64FromUInt8(std::vector<uint8_t> &vect, int &pos) {
+    return ((uint64_t) vect[pos++] << 56) |
+           ((uint64_t) vect[pos++] << 48) |
+           ((uint64_t) vect[pos++] << 40) |
+           ((uint64_t) vect[pos++] << 32) |
+           ((uint64_t) vect[pos++] << 24) |
+           ((uint64_t) vect[pos++] << 16) |
+           ((uint64_t) vect[pos++] <<  8) |
+           ((uint64_t) vect[pos++] <<  0);
   }
 
-  std::pair<opcode, std::optional<std::string>> decode(bool masked, std::string recvd, std::string &rxbuf) {
+  using decode_variant = std::variant<std::monostate, std::string, status>;
+  using decode_callback = std::function<void(opcode, decode_variant)>;
+
+  void decode(std::string recvd, std::string &rxbuf, decode_callback func) {
     if (rxbuf.length())
       recvd = rxbuf + recvd;
     
@@ -162,81 +204,79 @@ namespace p$web::ws {
 
     auto vect = p$funcs::to<std::vector, uint8_t>(recvd);
 
-    if (vect.size() < 2) {
-      p$funcs::append(rxbuf, recvd);
+    auto done = std::function<void()>([&]() {
+      auto left = p$funcs::to<std::basic_string, char>(vect);
+      p$funcs::append(rxbuf, left);
+    });
 
-      return {
-        opcode::UNKNOWN,
-        {}
-      };
+    while (!0) {
+      if (vect.size() < 2) {
+        done();
+        break;
+      }
+
+      auto opc = vect[0] & 0x0F; // opcode
+      auto len = vect[1] & 0x7F; // content length
+
+      // auto fin = (vect[0] & FIN) == FIN; // if 1, last message in series
+      auto msk = (vect[1] & MASK) == MASK; // if masked
+
+      auto pos = 2;
+
+      if (len == 126)
+        len = UInt16FromUInt8(vect, pos);
+
+      if (len == 127)
+        len = UInt64FromUInt8(vect, pos);
+
+      auto size = (msk ? MASKLEN : 0) + (len >= 65536 ? 6 : 0) + // frame header size
+                  (len >= 126 ? 2 : 0) + 2;
+
+      auto total = size + len; // total length of the frame
+
+      if (vect.size() < total) {
+        done();
+        break;
+      }
+
+      auto key = std::vector<int>();
+
+      if (msk) {
+        for (auto i = 0; i < MASKLEN; i++)
+          key[i] = ((int) vect[size + i]) << 0;
+      }
+
+      // -----
+
+      if (opc == OPCODE_PING) {
+        printf("ping len: %i\r\n", len);
+      }
+
+      if (opc == OPCODE_CLOSE) {
+        auto code = UInt16FromUInt8(vect, pos);
+        auto status = static_cast<enum status>(code);
+
+        func(opcode::CLOSE, status);
+      }
+
+      if (opc == OPCODE_TEXT || opc == OPCODE_BINARY || opc == OPCODE_CONTINUATION) {
+        auto begin = p$funcs::iterator(vect, size);
+        auto end = p$funcs::iterator(vect, total);
+
+        auto data = std::string(begin, end);
+
+        func(opcode::TEXT, data);
+      }
+
+      p$funcs::chop(vect, total);
     }
-
-    // auto fin = (vect[0] & FIN) == FIN; // if 1, last message in series
-    auto opc = vect[0] & 0x0F;
-    // auto msk = (vect[1] & MASK) == MASK;
-    auto len = vect[1] & 0x7F;
-
-    if (len == 126)
-      len = UInt8ToUInt16(vect, 2);
-
-    if (len == 127)
-      len = UInt8ToUInt64(vect, 2);
-
-    auto size = (masked ? MASKLEN : 0) + (len >= 65536 ? 6 : 0) +
-                (len >= 126 ? 2 : 0) + 2;
-
-    if (size + len > vect.size()) {
-      p$funcs::append(rxbuf, recvd);
-
-      return {
-        opcode::UNKNOWN,
-        {}
-      };
-    }
-
-    auto key = std::vector<int>();
-
-    if (masked) {
-      for (auto i = 0; i < MASKLEN; i++)
-        key[i] = ((int) vect[size + i]) << 0;
-    }
-
-    // --------
-
-    if (opc == OPCODE_CLOSE) {
-      printf("ws close len: %i\r\n", len);
-
-      return {
-        opcode::CLOSE,
-        {}
-      };
-    }
-
-    if (opc == OPCODE_TEXT || opc == OPCODE_BINARY || opc == OPCODE_CONTINUATION) {
-      auto end = p$funcs::iterator(vect, size + len);
-      auto begin = p$funcs::iterator(vect, size);
-
-      auto data = std::string(begin, end);
-
-      p$funcs::chop(vect, size + len);
-
-      if (!vect.empty())
-        rxbuf = p$funcs::to<std::basic_string, char>(vect);
-
-      return {
-        opcode::TEXT,
-        data
-      };
-    }
-
-    return {
-      opcode::UNKNOWN,
-      {}
-    };
   }
 }
 
 namespace p$web::wss {
+  using opcode = p$web::ws::opcode;
+  using status = p$web::ws::status;
+
   class Socket : p$web::tcps::Socket {
     private:
     p$web::url::parsed parsed;
@@ -251,7 +291,7 @@ namespace p$web::wss {
       virtual void ws_on_disconnect() { }
       virtual void ws_on_connect() { }
       virtual void ws_on_open() { }
-      virtual void ws_on_close() { }
+      virtual void ws_on_close(p$web::ws::status) { }
       virtual void ws_on_text(std::string text) {}
 
      void tcp_on_disconnect() {
@@ -296,30 +336,24 @@ namespace p$web::wss {
           }
 
           else {
-            printf("-> %s", recvd.data());
+            printf(recvd.data());
           }
         }
 
-
-
         else {
-          auto [opcode, dec] = p$web::ws::decode(!1, recvd, rxbuf);
+          p$web::ws::decode(recvd, rxbuf, [&](opcode opcode, p$web::ws::decode_variant vari) {
+            if (opcode == p$web::ws::opcode::CLOSE) {
+              open = !1;
 
-          if (opcode == p$web::ws::opcode::UNKNOWN)
-            return;
+              auto code = std::get<p$web::ws::status>(vari);
+              return ws_on_close(code);
+            }
 
-          printf("opcode: %i dec: %s\r\n", 
-            std::underlying_type_t<p$web::ws::opcode>(opcode),
-            (*dec).data()
-          );
-
-          if (opcode == p$web::ws::opcode::CLOSE) {
-            open = !1;
-            return ws_on_close();
-          }
-
-          if (opcode == p$web::ws::opcode::TEXT)
-            return ws_on_text(*dec);
+            if (opcode == p$web::ws::opcode::TEXT) {
+              auto text = std::get<std::string>(vari);
+              return ws_on_text(text);
+            }
+          });
         }
 
       }
