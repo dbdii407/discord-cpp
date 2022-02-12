@@ -2,6 +2,7 @@
 
 // Copyright (C) 2022 Dave Perry (dbdii407)
 
+#include "../error.hpp"
 #include "../funcs.hpp"
 
 #include <openssl/ssl.h>
@@ -11,19 +12,7 @@
 #include <vector>
 
 namespace p$web::ssl {
-  struct exception : public std::exception {
-    private:
-      std::string message;
-
-    public:
-      template <typename ...A>
-        exception(std::string_view str) : message(str) {
-        }
-
-      const char* what() const noexcept override {
-        return message.data();
-      }
-  };
+  using exception = p$err::exception;
 
   enum class status {
     FAIL = EOF,
@@ -96,12 +85,15 @@ namespace p$web::ssl {
         return event::ERROR;
       }
 
-      recvd += p$funcs::to<std::basic_string, char>(buffer);
+      auto begin = p$funcs::iterator(buffer, 0);
+      auto end = p$funcs::iterator(buffer, i);
+
+      recvd += std::string(begin, end);
       buffer.clear();
       len += i;
 
       if (i < size)
-        return recvd.substr(0, len);
+        return recvd;
     }
   }
 
