@@ -26,6 +26,12 @@ class Bot : public p$web::discord::Gateway {
       printf("READY: %s\r\n", text.data());
     }
 
+    void gateway_on_guild_create(p$json::obj data) {
+      auto text = p$json::stringify(data);
+
+      printf("GUILD: %s\r\n", text.data());
+    }
+
   public:
     Bot() : p$web::discord::Gateway("./config.json") {
 

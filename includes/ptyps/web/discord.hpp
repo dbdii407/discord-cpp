@@ -50,7 +50,9 @@ namespace p$web::discord {
       virtual void gateway_on_connect() { }
       virtual void gateway_on_open() { }
       virtual void gateway_on_close() { }
+
       virtual void gateway_on_ready(p$json::obj data) { }
+      virtual void gateway_on_guild_create(p$json::obj data) { }
 
       void ws_on_disconnect() {
         gateway_on_disconnect();
@@ -135,7 +137,8 @@ namespace p$web::discord {
           }
 
           if (event == "GUILD_CREATE") {
-            
+            auto data = p$json::get(packet, "d");
+            return gateway_on_guild_create(*data);
           }
         }
       }
