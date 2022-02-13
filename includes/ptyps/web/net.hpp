@@ -385,12 +385,15 @@ namespace p$web::net {
       if (i == 0)
         return event::DISCONNECTED;
 
-      recvd += p$funcs::to<std::basic_string, char>(buffer);
+      auto begin = p$funcs::iterator(buffer, 0);
+      auto end = p$funcs::iterator(buffer, i);
+
+      recvd += std::string(begin, end);
       buffer.clear();
       len += i;
 
       if (i < size)
-        return recvd.substr(0, len);
+        return recvd;
     }
   }
 
