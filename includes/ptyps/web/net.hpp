@@ -370,7 +370,7 @@ namespace p$web::net {
   std::variant<event, std::string> recv(uint id, size_t size = 1024) {
     std::vector<char> buffer(size);
     std::string recvd;
-    int len;
+    int len = 0;
 
     while (!0) {
       auto i = (int) ::read(id, &buffer[0], size);
