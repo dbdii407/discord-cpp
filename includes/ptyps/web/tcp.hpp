@@ -80,7 +80,7 @@ namespace ptyps::web::tcps {
 
         tcp_on_connect();
 
-        using pws$e = ptyps::web::ssl::event;
+        using pwse = ptyps::web::ssl::event;
 
         ptyps::thread::loop_run([&]() -> bool {
           if (!linked)
@@ -91,13 +91,13 @@ namespace ptyps::web::tcps {
           if (std::holds_alternative<ptyps::web::ssl::event>(vari)) {
             auto event = std::get<ptyps::web::ssl::event>(vari);
 
-            if (event == pws$e::DISCONNECTED || event == pws$e::ERROR) {
+            if (event == pwse::DISCONNECTED || event == pwse::ERROR) {
               linked = !1;
               tcp_on_disconnect();
               return !0;
             }
 
-            if (event == pws$e::WAITING)
+            if (event == pwse::WAITING)
               return !1;
           }
 
