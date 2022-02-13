@@ -49,11 +49,7 @@ namespace p$json {
 
   template <typename T>
     std::optional<T> value(obj o, std::string_view prop) {
-      auto list = std::list<std::string>();
-
-      p$string::split(&prop[0], ".", [&](auto next) {
-        list.push_back(next);
-      });
+      auto list = p$string::split<std::list>(&prop[0], ".");
 
       while (!0) {
         auto next = p$funcs::pop(list);
