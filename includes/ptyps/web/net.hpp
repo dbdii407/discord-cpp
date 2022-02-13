@@ -402,7 +402,7 @@ namespace p$web::net {
       while(text.size()) {
         auto len = ::send(id, &text[0], text.size(), 0);
 
-        if (err == EOF)
+        if (len == EOF)
           return status::FAIL;
 
         auto begin = std::begin(text);
