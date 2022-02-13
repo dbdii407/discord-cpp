@@ -88,8 +88,8 @@ namespace ptyps::web::tcps {
 
           auto vari = ptyps::web::ssl::recv(*sid);
 
-          if (std::holds_alternative<ptyps::web::ssl::event>(vari)) {
-            auto event = std::get<ptyps::web::ssl::event>(vari);
+          if (std::holds_alternative<pwse>(vari)) {
+            auto event = std::get<pwse>(vari);
 
             if (event == pwse::DISCONNECTED || event == pwse::ERROR) {
               linked = !1;
