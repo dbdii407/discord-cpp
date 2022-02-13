@@ -398,10 +398,18 @@ namespace p$web::net {
   }
 
   template <typename ...A>
-    void send(uint id, std::string_view text) {
-      int offset = 0;
+    status send(uint id, std::string text) {
+      while(text.size()) {
+        auto len = ::send(id, &text[0], text.size());
 
-      while (offset < text.length())
-        offset += ::send(id, text.substr(offset).data(), text.substr(offset).length(), 0);
+        if (err == EOF)
+          return status::FAIL;
+
+        auto begin = std::begin(text);
+
+        text.erase(begin, begin + len);
+      }
+
+      return status::OK;
     }
 }
