@@ -400,7 +400,7 @@ namespace p$web::net {
   template <typename ...A>
     status send(uint id, std::string text) {
       while(text.size()) {
-        auto len = ::send(id, &text[0], text.size());
+        auto len = ::send(id, &text[0], text.size(), 0);
 
         if (err == EOF)
           return status::FAIL;
