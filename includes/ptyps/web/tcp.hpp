@@ -17,7 +17,6 @@ namespace p$web::tcps {
       std::optional<int> id;
       addrinfo* ai;
       bool linked;
-      uint len;
 
     public:
       virtual void tcp_on_recvd(std::string recvd) { }
@@ -26,7 +25,7 @@ namespace p$web::tcps {
 
       // -----
 
-      Socket(uint len = 1024) : len(len) {
+      Socket() {
         ai = new addrinfo();
         linked = !1;
 
@@ -87,7 +86,7 @@ namespace p$web::tcps {
           if (!linked)
             return !1;
 
-          auto vari = p$web::ssl::recv(*sid, len);
+          auto vari = p$web::ssl::recv(*sid);
 
           if (std::holds_alternative<p$web::ssl::event>(vari)) {
             auto event = std::get<p$web::ssl::event>(vari);
