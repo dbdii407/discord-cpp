@@ -5,8 +5,8 @@
 #include "../json.hpp"
 #include "./ws.hpp"
 
-namespace p$web::discord {
-  using exception = p$err::exception;
+namespace ptyps::web::discord {
+  using exception = ptyps::err::exception;
 
   constexpr int OP_DISPATCH = 0;
   constexpr int OP_HEARTBEAT = 1;
@@ -34,16 +34,16 @@ namespace p$web::discord {
     HEARTBEAT_ACK = OP_HEARTBEAT_ACK
   };
 
-  std::string createPacket(opcode op, p$json::obj data) {
-    return p$json::stringify({
+  std::string createPacket(opcode op, ptyps::json::obj data) {
+    return ptyps::json::stringify({
       {"op", std::underlying_type_t<opcode>(op)},
       {"d", data}
     });
   }
 
-  class Gateway : public p$web::wss::Socket {
+  class Gateway : public ptyps::web::wss::Socket {
     private:
-      p$json::obj opts;
+      ptyps::json::obj opts;
       int last;
 
       virtual void gateway_on_disconnect() { }
@@ -51,8 +51,8 @@ namespace p$web::discord {
       virtual void gateway_on_open() { }
       virtual void gateway_on_close() { }
 
-      virtual void gateway_on_ready(p$json::obj data) { }
-      virtual void gateway_on_guild_create(p$json::obj data) { }
+      virtual void gateway_on_ready(ptyps::json::obj data) { }
+      virtual void gateway_on_guild_create(ptyps::json::obj data) { }
 
       void ws_on_disconnect() {
         gateway_on_disconnect();
@@ -71,18 +71,18 @@ namespace p$web::discord {
       }
 
       void ws_on_text(std::string text) {
-        auto packet = p$json::parse(text);
+        auto packet = ptyps::json::parse(text);
 
-        auto sequence = p$json::value<int>(packet, "s");
+        auto sequence = ptyps::json::value<int>(packet, "s");
 
         if (sequence)
           last = *sequence;
 
-        auto opc = p$json::value<int>(packet, "op");
+        auto opc = ptyps::json::value<int>(packet, "op");
 
         if (opc == OP_HELLO) {
           auto payload = createPacket(opcode::IDENTIFY, {
-            {"token", *p$json::value<std::string>(opts, "token")},
+            {"token", *ptyps::json::value<std::string>(opts, "token")},
             {"intents", 513},
             {"properties", {
               {"$browser", "chrome"},
@@ -106,11 +106,11 @@ namespace p$web::discord {
           //
           // https://discord.com/developers/docs/topics/gateway#heartbeat
 
-          auto beat = p$json::value<int>(packet, "d.heartbeat_interval");
+          auto beat = ptyps::json::value<int>(packet, "d.heartbeat_interval");
 
           auto time = std::chrono::milliseconds(*beat);
 
-          return p$thread::interval_run(time, [&]() -> bool {
+          return ptyps::thread::interval_run(time, [&]() -> bool {
             if (!connected())
               return !0;
 
@@ -129,23 +129,23 @@ namespace p$web::discord {
         }
       
         if (opc == OP_DISPATCH) {
-          auto event = p$json::value<std::string>(packet, "t");
+          auto event = ptyps::json::value<std::string>(packet, "t");
 
           if (event == "READY") {
-            auto data = p$json::get(packet, "d");
+            auto data = ptyps::json::get(packet, "d");
             return gateway_on_ready(*data);
           }
 
           if (event == "GUILD_CREATE") {
-            auto data = p$json::get(packet, "d");
+            auto data = ptyps::json::get(packet, "d");
             return gateway_on_guild_create(*data);
           }
         }
       }
 
     public:
-      Gateway(std::string_view filepath) : p$web::wss::Socket("wss://gateway.discord.gg/?v=9&encoding=json") {
-        opts = p$json::open(&filepath[0]);
+      Gateway(std::string_view filepath) : ptyps::web::wss::Socket("wss://gateway.discord.gg/?v=9&encoding=json") {
+        opts = ptyps::json::open(&filepath[0]);
       }
   };
 }

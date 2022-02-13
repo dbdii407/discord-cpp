@@ -6,7 +6,7 @@
 
 #include <functional>
 
-namespace p$thread {
+namespace ptyps::thread {
   void run(std::function<bool()> func) {
     auto thread = std::thread(func);
     thread.detach();
@@ -36,7 +36,7 @@ namespace p$thread {
     std::thread interval(std::chrono::duration<T, D> time, std::function<bool()> func) {
       return std::thread([time, func]() {
         while (!0) {
-          p$time::wait(time);
+          ptyps::time::wait(time);
           
           auto stop = func();
 

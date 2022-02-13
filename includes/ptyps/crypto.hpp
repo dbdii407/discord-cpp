@@ -7,9 +7,9 @@
 
 #include "./funcs.hpp"
 
-namespace p$crypto {
+namespace ptyps::crypto {
   std::string sha1(std::string in) {
-    auto to = p$funcs::to<std::basic_string, u_char>(in);
+    auto to = ptyps::funcs::to<std::basic_string, u_char>(in);
 
     std::vector<u_char> vect(SHA_DIGEST_LENGTH);
 

@@ -7,8 +7,8 @@
 #include "./tcp.hpp"
 #include "./url.hpp"
 
-namespace p$web::ws {
-  using exception = p$err::exception;
+namespace ptyps::web::ws {
+  using exception = ptyps::err::exception;
 
   enum class state {
     CONNECTING,
@@ -86,7 +86,7 @@ namespace p$web::ws {
   static std::string magic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
   std::string createHandshakeKey() {
-    auto random = p$random::string(12, std::vector<char>({
+    auto random = ptyps::random::string(12, std::vector<char>({
       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
       'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
       'U', 'V', 'W', 'X', 'Y', 'Z',
@@ -96,16 +96,16 @@ namespace p$web::ws {
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
     }));
 
-    auto hash = p$crypto::sha1(random + magic);
+    auto hash = ptyps::crypto::sha1(random + magic);
 
-    return p$crypto::base64(hash);
+    return ptyps::crypto::base64(hash);
   }
 
   std::vector<uint8_t> createMaskingKey() {
     auto out = std::vector<uint8_t>();
 
     for (auto i = 0; i < MASKLEN; i++) {
-      auto next = p$random::number(0, 255);
+      auto next = ptyps::random::number(0, 255);
       out.push_back(next);
     }
 
@@ -174,14 +174,14 @@ namespace p$web::ws {
       vect[p++] = key[3];
     }
 
-    p$funcs::append(vect, data);
+    ptyps::funcs::append(vect, data);
 
     if (masked) {
       for (auto i = 0; i != length; ++i)
         vect[size + i] ^= key[i & 0x03];
     }
 
-    return p$funcs::to<std::basic_string, char>(vect);
+    return ptyps::funcs::to<std::basic_string, char>(vect);
   }
 
   uint16_t UInt16FromUInt8(std::vector<uint8_t> &vect, int &pos) {
@@ -209,10 +209,10 @@ namespace p$web::ws {
     
     rxbuf.clear();
 
-    auto vect = p$funcs::to<std::vector, uint8_t>(recvd);
+    auto vect = ptyps::funcs::to<std::vector, uint8_t>(recvd);
 
     auto done = std::function<void()>([&]() {
-      p$funcs::append(rxbuf, vect);
+      ptyps::funcs::append(rxbuf, vect);
     });
 
     while (!0) {
@@ -266,38 +266,38 @@ namespace p$web::ws {
       }
 
       if (opc == OPCODE_TEXT || opc == OPCODE_BINARY || opc == OPCODE_CONTINUATION) {
-        auto begin = p$funcs::iterator(vect, size);
-        auto end = p$funcs::iterator(vect, total);
+        auto begin = ptyps::funcs::iterator(vect, size);
+        auto end = ptyps::funcs::iterator(vect, total);
 
         auto data = std::string(begin, end);
 
         func(opcode::TEXT, data);
       }
 
-      p$funcs::chop(vect, total);
+      ptyps::funcs::chop(vect, total);
     }
   }
 }
 
-namespace p$web::wss {
-  using opcode = p$web::ws::opcode;
-  using status = p$web::ws::status;
-  using state = p$web::ws::state;
+namespace ptyps::web::wss {
+  using opcode = ptyps::web::ws::opcode;
+  using status = ptyps::web::ws::status;
+  using state = ptyps::web::ws::state;
 
-  class Socket : p$web::tcps::Socket {
+  class Socket : ptyps::web::tcps::Socket {
     private:
-    p$web::url::parsed parsed;
+    ptyps::web::url::parsed parsed;
     std::string rxbuf;
     state cond;
 
     public:
-      using p$web::tcps::Socket::connected;
-      using p$web::tcps::Socket::loop;
+      using ptyps::web::tcps::Socket::connected;
+      using ptyps::web::tcps::Socket::loop;
 
       virtual void ws_on_disconnect() { }
       virtual void ws_on_connect() { }
       virtual void ws_on_open() { }
-      virtual void ws_on_close(p$web::ws::status) { }
+      virtual void ws_on_close(ptyps::web::ws::status) { }
       virtual void ws_on_text(std::string text) {}
 
       void tcp_on_disconnect() {
@@ -313,27 +313,27 @@ namespace p$web::wss {
 
         auto list = std::vector<std::string>();
 
-        auto top = p$string::format("GET /%s HTTP/1.1", parsed.query.data());
+        auto top = ptyps::string::format("GET /%s HTTP/1.1", parsed.query.data());
 
         list.push_back(top);
         list.push_back("Host: " + parsed.host);
         list.push_back("Upgrade: websocket");
         list.push_back("Connection: Upgrade");
-        list.push_back("Sec-WebSocket-Key: " + p$web::ws::createHandshakeKey());
+        list.push_back("Sec-WebSocket-Key: " + ptyps::web::ws::createHandshakeKey());
         list.push_back("Sec-WebSocket-Version: 13");
         list.push_back({});
         list.push_back({});
 
-        auto request = p$string::join(list, "\r\n");
+        auto request = ptyps::string::join(list, "\r\n");
 
-        p$web::tcps::Socket::write(request);
+        ptyps::web::tcps::Socket::write(request);
       }
 
       void tcp_on_recvd(std::string recvd) {
         if (cond == state::CONNECTING) {
-          auto response = p$string::split<std::list>(recvd, "\r\n");
+          auto response = ptyps::string::split<std::list>(recvd, "\r\n");
 
-          auto top = p$funcs::pop(response);
+          auto top = ptyps::funcs::pop(response);
 
           if (!top || top != "HTTP/1.1 101 Switching Protocols")
             return;
@@ -344,7 +344,7 @@ namespace p$web::wss {
         }
 
         if (cond == state::OPEN) {
-          p$web::ws::decode(recvd, rxbuf, [&](opcode opcode, p$web::ws::decode_variant vari) {
+          ptyps::web::ws::decode(recvd, rxbuf, [&](opcode opcode, ptyps::web::ws::decode_variant vari) {
             if (opcode == opcode::CLOSE) {
               cond = state::CLOSING;
 
@@ -364,17 +364,17 @@ namespace p$web::wss {
         }
       }
 
-      Socket(std::string_view addr) : p$web::tcps::Socket() {
-        parsed = p$web::url::parse(&addr[0]);
+      Socket(std::string_view addr) : ptyps::web::tcps::Socket() {
+        parsed = ptyps::web::url::parse(&addr[0]);
       }
 
       void connect() {
-        p$web::tcps::Socket::connect(parsed.port, parsed.host);
+        ptyps::web::tcps::Socket::connect(parsed.port, parsed.host);
       }
 
       void write(std::string text) {
-        auto enc = p$web::ws::encode(!0, p$web::ws::opcode::TEXT, text);
-        p$web::tcps::Socket::write(enc);
+        auto enc = ptyps::web::ws::encode(!0, ptyps::web::ws::opcode::TEXT, text);
+        ptyps::web::tcps::Socket::write(enc);
       }
   };
 }

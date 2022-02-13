@@ -7,7 +7,7 @@
 #include <optional>
 #include <iterator>
 
-namespace p$funcs {
+namespace ptyps::funcs {
   template <template <typename ...> typename C, typename ...A, typename I = typename C<A ...>::iterator>
     std::pair<I, I> ranges(C<A ...> &cont, uint start = 0, uint stop = 0) {
       auto begin = std::begin(cont) + start;
@@ -36,8 +36,8 @@ namespace p$funcs {
 
   // ---- find
 
-  template <template <typename ...> typename C, typename ...A, typename R = typename p$details::iter<C<A ...>>::type>
-    std::optional<R> find(C<A...> &cont, std::function<bool(typename p$details::iter<C<A...>>::type)> func) {
+  template <template <typename ...> typename C, typename ...A, typename R = typename ptyps::details::iter<C<A ...>>::type>
+    std::optional<R> find(C<A...> &cont, std::function<bool(typename ptyps::details::iter<C<A...>>::type)> func) {
       auto [begin, end] = ranges(cont);
 
       for (auto iter = begin; iter != end; ++iter) {
@@ -50,8 +50,8 @@ namespace p$funcs {
       return {};
     }
 
-  template <template <typename ...> typename C, typename ...A, typename R = typename p$details::iter<C<A ...>>::type>
-    bool find(C<A...> &cont, typename p$details::iter<C<A...>>::type it) {
+  template <template <typename ...> typename C, typename ...A, typename R = typename ptyps::details::iter<C<A ...>>::type>
+    bool find(C<A...> &cont, typename ptyps::details::iter<C<A...>>::type it) {
       auto [begin, end] = ranges(cont);
 
       for (auto iter = begin; iter != end; ++iter) {
@@ -64,7 +64,7 @@ namespace p$funcs {
 
   // ---- pop
 
-  template <template <typename ...> typename C, typename ...A, typename R = typename p$details::iter<C<A ...>>::type>
+  template <template <typename ...> typename C, typename ...A, typename R = typename ptyps::details::iter<C<A ...>>::type>
     std::optional<R> pop(C<A...> &cont) {
       if (cont.size() == 0)
         return {};
@@ -79,7 +79,7 @@ namespace p$funcs {
   // ---- each
 
   template <template <typename ...> typename C, typename ...A>
-    void each(C<A...> cont, std::function<void(typename p$details::iter<C<A ...>>::type)> func) {
+    void each(C<A...> cont, std::function<void(typename ptyps::details::iter<C<A ...>>::type)> func) {
       auto [begin, end] = ranges(cont);
 
       for (auto iter = begin; iter != end; ++iter)
@@ -87,7 +87,7 @@ namespace p$funcs {
     }
 
   template <template <typename ...> typename C, typename ...A>
-    void each(C<A...> cont, std::function<void(typename p$details::iter<C<A ...>>::type, int)> func) {
+    void each(C<A...> cont, std::function<void(typename ptyps::details::iter<C<A ...>>::type, int)> func) {
       auto [begin, end] = ranges(cont);
 
       for (auto iter = begin; iter != end; ++iter) {
@@ -98,8 +98,8 @@ namespace p$funcs {
 
   // ---- includes
 
-  template <template <typename ...> typename C, typename ...A, typename R = typename p$details::iter<C<A ...>>::type>
-    bool includes(C<A...> &cont, std::function<bool(typename p$details::iter<C<A...>>::type)> func) {
+  template <template <typename ...> typename C, typename ...A, typename R = typename ptyps::details::iter<C<A ...>>::type>
+    bool includes(C<A...> &cont, std::function<bool(typename ptyps::details::iter<C<A...>>::type)> func) {
       auto [begin, end] = ranges(cont);
 
       for (auto iter = begin; iter != end; ++iter) {
@@ -112,8 +112,8 @@ namespace p$funcs {
       return !1;
     }
 
-  template <template <typename ...> typename C, typename ...A, typename R = typename p$details::iter<C<A ...>>::type>
-    bool includes(C<A...> &cont, typename p$details::iter<C<A...>>::type to) {
+  template <template <typename ...> typename C, typename ...A, typename R = typename ptyps::details::iter<C<A ...>>::type>
+    bool includes(C<A...> &cont, typename ptyps::details::iter<C<A...>>::type to) {
       auto [begin, end] = ranges(cont);
 
       for (auto iter = begin; iter != end; ++iter) {
@@ -129,7 +129,7 @@ namespace p$funcs {
   // ---- remove
 
   template <template <typename ...> typename C, typename ...A>
-    void remove(C<A...> &cont, typename p$details::iter<C<A...>>::type find) {
+    void remove(C<A...> &cont, typename ptyps::details::iter<C<A...>>::type find) {
       auto [begin, end] = ranges(cont);
 
       for (auto iter = begin; iter != end; ++iter) {
@@ -141,7 +141,7 @@ namespace p$funcs {
     }
 
   template <template <typename ...> typename C, typename ...A>
-    void remove(C<A...> &cont, std::function<bool(typename p$details::iter<C<A...>>::type)> func) {
+    void remove(C<A...> &cont, std::function<bool(typename ptyps::details::iter<C<A...>>::type)> func) {
       auto [begin, end] = ranges(cont);
 
       for (auto iter = begin; iter != end; ++iter) {

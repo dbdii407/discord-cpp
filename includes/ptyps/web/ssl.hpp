@@ -11,8 +11,8 @@
 #include <variant>
 #include <vector>
 
-namespace p$web::ssl {
-  using exception = p$err::exception;
+namespace ptyps::web::ssl {
+  using exception = ptyps::err::exception;
 
   enum class status {
     FAIL = EOF,
@@ -85,8 +85,8 @@ namespace p$web::ssl {
         return event::ERROR;
       }
 
-      auto begin = p$funcs::iterator(buffer, 0);
-      auto end = p$funcs::iterator(buffer, i);
+      auto begin = ptyps::funcs::iterator(buffer, 0);
+      auto end = ptyps::funcs::iterator(buffer, i);
 
       recvd += std::string(begin, end);
       buffer.clear();

@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <string>
 
-namespace p$filesystem {
+namespace ptyps::filesystem {
   std::optional<std::string> read(std::string_view file) {
     auto fp = fopen(&file[0], "r");
     auto out = std::string();

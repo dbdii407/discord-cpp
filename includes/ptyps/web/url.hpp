@@ -11,8 +11,8 @@
 #include "../string.hpp"
 #include "../error.hpp"
 
-namespace p$web::url {
-  using exception = p$err::exception;
+namespace ptyps::web::url {
+  using exception = ptyps::err::exception;
 
   std::string escape(std::string url) {
     auto curl = curl_easy_init();
@@ -36,7 +36,7 @@ namespace p$web::url {
       list.push_back(next);
     }
 
-    return "?" + p$string::join(list, "&");
+    return "?" + ptyps::string::join(list, "&");
   } 
 
   struct formation {
@@ -127,7 +127,7 @@ namespace p$web::url {
     // now it's the path
     addr = addr.substr(0, pos);
 
-    p$string::split(ques, "&", [&](auto que) {
+    ptyps::string::split(ques, "&", [&](auto que) {
       auto i = que.find_first_of("=");
 
       auto property = que.substr(0, i++);

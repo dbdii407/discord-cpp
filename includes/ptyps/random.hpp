@@ -6,7 +6,7 @@
 #include <random>
 #include <string>
 
-namespace p$random {
+namespace ptyps::random {
   static auto engine = std::default_random_engine(std::random_device{}()); 
 
   inline uint number(uint start, uint end) {

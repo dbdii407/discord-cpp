@@ -14,8 +14,8 @@
 #include <vector>
 #include <list>
 
-namespace p$web::net {
-  using exception = p$err::exception;
+namespace ptyps::web::net {
+  using exception = ptyps::err::exception;
 
   enum class status {
     FAIL = EOF,
@@ -310,7 +310,7 @@ namespace p$web::net {
       auto it = get_addr(next);
 
       if (f == family::Unspecified || fam == f) {
-        auto exists = p$funcs::find(out, it);
+        auto exists = ptyps::funcs::find(out, it);
 
         if (!exists)
           out.push_back(it);
@@ -385,8 +385,8 @@ namespace p$web::net {
       if (i == 0)
         return event::DISCONNECTED;
 
-      auto begin = p$funcs::iterator(buffer, 0);
-      auto end = p$funcs::iterator(buffer, i);
+      auto begin = ptyps::funcs::iterator(buffer, 0);
+      auto end = ptyps::funcs::iterator(buffer, i);
 
       recvd += std::string(begin, end);
       buffer.clear();

@@ -4,7 +4,7 @@
 
 #include <string>
 
-namespace p$string {
+namespace ptyps::string {
   using view = std::string_view;
 
   template <typename ...A>

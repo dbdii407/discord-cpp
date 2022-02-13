@@ -3,7 +3,7 @@
 #include <chrono>
 #include <thread>
 
-namespace p$time {
+namespace ptyps::time {
   template <typename T, typename D>
     void wait(std::chrono::duration<T, D> time) {
       std::this_thread::sleep_for(time);

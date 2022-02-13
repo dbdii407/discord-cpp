@@ -4,7 +4,7 @@
 
 #include <functional>
 
-namespace p$details {
+namespace ptyps::details {
   template <typename T>
     struct func : public func<decltype(&T::operator())> {
 

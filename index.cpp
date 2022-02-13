@@ -2,7 +2,7 @@
 
 // Copyright (C) 2022 Dave Perry (dbdii407)
 
-class Bot : public p$web::discord::Gateway {
+class Bot : public ptyps::web::discord::Gateway {
   private:
     void gateway_on_disconnect() {
       printf("Gateway was disconnected\r\n");
@@ -20,20 +20,20 @@ class Bot : public p$web::discord::Gateway {
       printf("Gateway is closing\r\n");
     }
 
-    void gateway_on_ready(p$json::obj data) {
-      auto text = p$json::stringify(data);
+    void gateway_on_ready(ptyps::json::obj data) {
+      auto text = ptyps::json::stringify(data);
 
       printf("READY: %s\r\n", text.data());
     }
 
-    void gateway_on_guild_create(p$json::obj data) {
-      auto text = p$json::stringify(data);
+    void gateway_on_guild_create(ptyps::json::obj data) {
+      auto text = ptyps::json::stringify(data);
 
       printf("GUILD: %s\r\n", text.data());
     }
 
   public:
-    Bot() : p$web::discord::Gateway("./config.json") {
+    Bot() : ptyps::web::discord::Gateway("./config.json") {
 
     }
 };

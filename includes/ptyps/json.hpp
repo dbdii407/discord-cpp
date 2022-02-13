@@ -11,10 +11,10 @@
 #include "./funcs.hpp"
 #include "./error.hpp"
 
-namespace p$json {
+namespace ptyps::json {
   using obj = boost::json::value;
 
-  using exception = p$err::exception;
+  using exception = ptyps::err::exception;
 
   obj object(std::initializer_list<boost::json::value_ref> init) {
     return boost::json::value(init); 
@@ -25,7 +25,7 @@ namespace p$json {
   }
 
   obj open(std::string_view file) {
-    auto contents = p$filesystem::read(&file[0]);
+    auto contents = ptyps::filesystem::read(&file[0]);
 
     if (!contents)
       throw exception("unable to read json file");
@@ -49,10 +49,10 @@ namespace p$json {
 
   template <typename T>
     std::optional<T> value(obj o, std::string_view prop) {
-      auto list = p$string::split<std::list>(&prop[0], ".");
+      auto list = ptyps::string::split<std::list>(&prop[0], ".");
 
       while (!0) {
-        auto next = p$funcs::pop(list);
+        auto next = ptyps::funcs::pop(list);
 
         if (!next)
           break;

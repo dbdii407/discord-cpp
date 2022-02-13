@@ -6,7 +6,7 @@
 
 #include <exception>
 
-namespace p$err {
+namespace ptyps::err {
   struct exception : public std::exception {
     private:
       std::string message;

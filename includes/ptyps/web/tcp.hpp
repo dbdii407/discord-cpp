@@ -8,8 +8,8 @@
 
 #include <fcntl.h>
 
-namespace p$web::tcps {
-  using exception = p$err::exception;
+namespace ptyps::web::tcps {
+  using exception = ptyps::err::exception;
 
   class Socket {
     private:
@@ -29,8 +29,8 @@ namespace p$web::tcps {
         ai = new addrinfo();
         linked = !1;
 
-        p$web::net::set_type(ai, p$web::net::type::STREAM);
-        p$web::net::set_proto(ai, p$web::net::proto::TCP);
+        ptyps::web::net::set_type(ai, ptyps::web::net::type::STREAM);
+        ptyps::web::net::set_proto(ai, ptyps::web::net::proto::TCP);
       }
 
       bool connected() {
@@ -41,36 +41,36 @@ namespace p$web::tcps {
         if (!linked)
           throw exception("cannot write to closed socket");
 
-        p$web::ssl::send(*sid, text);
+        ptyps::web::ssl::send(*sid, text);
       }
 
       void connect(uint16_t port, std::string addr) {
-        auto lookup = p$web::net::lookup(addr);
+        auto lookup = ptyps::web::net::lookup(addr);
 
         if (!lookup.size())
           throw exception("unable to resolve address");
 
-        p$web::net::set_addr(ai, lookup.at(0));
-        p$web::net::set_port(ai, port);
+        ptyps::web::net::set_addr(ai, lookup.at(0));
+        ptyps::web::net::set_port(ai, port);
 
-        id = p$web::net::open(ai);
+        id = ptyps::web::net::open(ai);
 
         if (!id)
           throw exception("unable to open socket");
 
-        auto i = p$web::net::connect(*id, ai);
+        auto i = ptyps::web::net::connect(*id, ai);
 
-        if (i == p$web::net::status::FAIL)
+        if (i == ptyps::web::net::status::FAIL)
           throw exception("unable to connect socket");
 
-        sid = p$web::ssl::open(*id);
+        sid = ptyps::web::ssl::open(*id);
 
         if (!sid)
           throw exception("unable to open ssl");
 
-        auto s = p$web::ssl::connect(*sid);
+        auto s = ptyps::web::ssl::connect(*sid);
 
-        if (s == p$web::ssl::status::FAIL)
+        if (s == ptyps::web::ssl::status::FAIL)
           throw exception("unable to connect ssl socket");
 
         // set the socket as non-blocking
@@ -80,16 +80,16 @@ namespace p$web::tcps {
 
         tcp_on_connect();
 
-        using pws$e = p$web::ssl::event;
+        using pws$e = ptyps::web::ssl::event;
 
-        p$thread::loop_run([&]() -> bool {
+        ptyps::thread::loop_run([&]() -> bool {
           if (!linked)
             return !1;
 
-          auto vari = p$web::ssl::recv(*sid);
+          auto vari = ptyps::web::ssl::recv(*sid);
 
-          if (std::holds_alternative<p$web::ssl::event>(vari)) {
-            auto event = std::get<p$web::ssl::event>(vari);
+          if (std::holds_alternative<ptyps::web::ssl::event>(vari)) {
+            auto event = std::get<ptyps::web::ssl::event>(vari);
 
             if (event == pws$e::DISCONNECTED || event == pws$e::ERROR) {
               linked = !1;
@@ -114,7 +114,7 @@ namespace p$web::tcps {
         auto timeout = std::chrono::seconds(seconds);
 
         while (linked)
-          p$time::wait(timeout);
+          ptyps::time::wait(timeout);
       }
   };
 }
