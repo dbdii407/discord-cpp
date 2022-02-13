@@ -10,6 +10,13 @@
 namespace p$web::ws {
   using exception = p$err::exception;
 
+  enum class state {
+    CONNECTING,
+    OPEN,
+    CLOSING,
+    CLOSE
+  };
+
   // -----
 
   constexpr int OPCODE_CONTINUATION = 0b00000000;
@@ -275,13 +282,13 @@ namespace p$web::ws {
 namespace p$web::wss {
   using opcode = p$web::ws::opcode;
   using status = p$web::ws::status;
+  using state = p$web::ws::state;
 
   class Socket : p$web::tcps::Socket {
     private:
     p$web::url::parsed parsed;
     std::string rxbuf;
-    bool initiated;
-    bool open;
+    state cond;
 
     public:
       using p$web::tcps::Socket::connected;
@@ -293,11 +300,15 @@ namespace p$web::wss {
       virtual void ws_on_close(p$web::ws::status) { }
       virtual void ws_on_text(std::string text) {}
 
-     void tcp_on_disconnect() {
-       ws_on_disconnect();
+      void tcp_on_disconnect() {
+        cond = state::CLOSE;
+
+        ws_on_disconnect();
      }
      
       void tcp_on_connect() {
+        cond = state::CONNECTING;
+
         ws_on_connect();
 
         auto list = std::vector<std::string>();
@@ -319,30 +330,23 @@ namespace p$web::wss {
       }
 
       void tcp_on_recvd(std::string recvd) {
-        if (!open) {
-          if (!initiated) {
-            auto response = p$string::split<std::list>(recvd, "\r\n");
+        if (cond == state::CONNECTING) {
+          auto response = p$string::split<std::list>(recvd, "\r\n");
 
-            auto top = p$funcs::pop(response);
+          auto top = p$funcs::pop(response);
 
-            if (!top || top != "HTTP/1.1 101 Switching Protocols")
-              return;
+          if (!top || top != "HTTP/1.1 101 Switching Protocols")
+            return;
 
-            initiated = !0;
-            open = !0;
+          cond = state::OPEN;
 
-            return ws_on_open();
-          }
-
-          else {
-            printf(recvd.data());
-          }
+          return ws_on_open();
         }
 
-        else {
+        if (cond == state::OPEN) {
           p$web::ws::decode(recvd, rxbuf, [&](opcode opcode, p$web::ws::decode_variant vari) {
             if (opcode == opcode::CLOSE) {
-              open = !1;
+              cond = state::CLOSING;
 
               auto code = std::get<status>(vari);
               return ws_on_close(code);
@@ -355,12 +359,13 @@ namespace p$web::wss {
           });
         }
 
+        if (cond == state::CLOSING) {
+          printf(recvd.data());
+        }
       }
 
       Socket(std::string_view addr) : p$web::tcps::Socket() {
         parsed = p$web::url::parse(&addr[0]);
-        initiated = !1;
-        open = !1;
       }
 
       void connect() {
