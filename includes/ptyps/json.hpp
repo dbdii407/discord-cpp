@@ -9,23 +9,12 @@
 #include "./filesystem.hpp"
 #include "./string.hpp"
 #include "./funcs.hpp"
+#include "./error.hpp"
 
 namespace p$json {
   using obj = boost::json::value;
 
-  struct exception : public std::exception {
-    private:
-      std::string message;
-
-    public:
-      template <typename ...A>
-        exception(std::string_view str) : message(str) {
-        }
-
-      const char* what() const noexcept override {
-        return message.data();
-      }
-  };
+  using exception = p$err::exception;
 
   obj object(std::initializer_list<boost::json::value_ref> init) {
     return boost::json::value(init); 
