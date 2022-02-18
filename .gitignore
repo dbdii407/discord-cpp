@@ -1,3 +1,5 @@
 config.json
 test.cpp
 dist/*
+includes/ptyps/promise.hpp
+includes/ptyps/web/https.hpp

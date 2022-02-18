@@ -85,8 +85,8 @@ namespace ptyps::web::ssl {
         return event::ERROR;
       }
 
-      auto begin = ptyps::funcs::iterator(buffer, 0);
-      auto end = ptyps::funcs::iterator(buffer, i);
+      auto begin = ptyps::iter::begin(buffer, 0);
+      auto end = ptyps::iter::begin(buffer, i);
 
       recvd += std::string(begin, end);
       buffer.clear();

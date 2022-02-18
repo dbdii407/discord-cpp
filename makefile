@@ -11,3 +11,6 @@ SRCS = ./src/pqt/*.cpp
 
 main:
 	$(CC) $(ARGS) $(HEADERS) $(LIBFLAGS) index.cpp -o ./dist/app
+
+test:
+	$(CC) $(ARGS) $(HEADERS) $(LIBFLAGS) test.cpp -o ./dist/test

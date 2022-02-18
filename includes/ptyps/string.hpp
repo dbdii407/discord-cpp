@@ -2,13 +2,14 @@
 
 // Copyright (C) 2022 Dave Perry (dbdii407)
 
+#include <functional>
 #include <string>
 
-namespace ptyps::string {
-  using view = std::string_view;
+#include "./iter.hpp"
 
+namespace ptyps::string {
   template <typename ...A>
-    std::string format(view form, A ...args) {
+    std::string format(std::string_view form, A ...args) {
       auto length = std::snprintf(nullptr, 0, &form[0], args...);
       auto out = std::string();
       out.resize(length);
@@ -63,5 +64,21 @@ namespace ptyps::string {
     });
 
    str.erase(iter.base(), str.end());
+  }
+
+  inline void lower(std::string &text) {
+    auto [begin, end] = ptyps::iter::ranges(text);
+
+    std::transform(begin, end, begin, [] (char next) {
+      return std::tolower(next);
+    });
+  }
+
+  inline void upper(std::string &text) {
+    auto [begin, end] = ptyps::iter::ranges(text);
+
+    std::transform(begin, end, begin, [] (char next) {
+      return std::toupper(next);
+    });
   }
 }

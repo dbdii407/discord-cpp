@@ -211,21 +211,17 @@ namespace ptyps::web::ws {
 
     auto vect = ptyps::funcs::to<std::vector, uint8_t>(recvd);
 
-    auto done = std::function<void()>([&]() {
-      ptyps::funcs::append(rxbuf, vect);
-    });
-
     while (!0) {
       if (vect.size() < 2) {
-        done();
+        ptyps::funcs::append(rxbuf, vect);
         break;
       }
 
-      auto opc = vect[0] & 0x0F; // opcode
-      auto len = vect[1] & 0x7F; // content length
-
       // auto fin = (vect[0] & FIN) == FIN; // if 1, last message in series
       auto msk = (vect[1] & MASK) == MASK; // if masked
+
+      auto opc = vect[0] & 0x0F; // opcode
+      auto len = vect[1] & 0x7F; // content length
 
       auto pos = 2;
 
@@ -241,7 +237,7 @@ namespace ptyps::web::ws {
       auto total = size + len; // total length of the frame
 
       if (vect.size() < total) {
-        done();
+        ptyps::funcs::append(rxbuf, vect);
         break;
       }
 
@@ -266,8 +262,8 @@ namespace ptyps::web::ws {
       }
 
       if (opc == OPCODE_TEXT || opc == OPCODE_BINARY || opc == OPCODE_CONTINUATION) {
-        auto begin = ptyps::funcs::iterator(vect, size);
-        auto end = ptyps::funcs::iterator(vect, total);
+        auto begin = ptyps::iter::begin(vect, size);
+        auto end = ptyps::iter::begin(vect, total);
 
         auto data = std::string(begin, end);
 

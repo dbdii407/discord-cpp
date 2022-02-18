@@ -19,9 +19,17 @@ namespace ptyps::web::tcps {
       bool linked;
 
     public:
-      virtual void tcp_on_recvd(std::string recvd) { }
-      virtual void tcp_on_connect() { }
-      virtual void tcp_on_disconnect() { }
+      virtual void tcp_on_recvd(std::string recvd) {
+
+      }
+
+      virtual void tcp_on_disconnect() {
+      
+      }
+
+      virtual void tcp_on_connect() {
+
+      }
 
       // -----
 
